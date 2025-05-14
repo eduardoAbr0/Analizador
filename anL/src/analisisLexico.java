@@ -20,7 +20,7 @@ public class analisisLexico {
         StringBuilder documento = new StringBuilder();
 
         try (BufferedReader br = new BufferedReader(
-                new FileReader("/Users/ed308lejo/Documents/anL/anlexic.txt"))) {
+                new FileReader("C:\\Users\\ed308\\Documents\\Analizador\\Analizador\\anL\\anlexic.txt"))) {
             String linea;
             while ((linea = br.readLine()) != null) {
                     documento.append(linea).append("\n");
@@ -38,14 +38,22 @@ public class analisisLexico {
         System.out.println("\n"+documento);
         
 
-        Pattern patronesBusqueda = Pattern.compile("\\b(vis|neg|ver|cond|condsi|cil|nt|dc|bool|itr)\\b|[*-+/]|(\n)|[;]", Pattern.CASE_INSENSITIVE);
+        Pattern patronesBusqueda = Pattern.compile(""
+        + "(?<Tipo>\\b(nt|dc|bool|itr)\\b)"
+        + "|(?<Booleano>\\b(neg|ver)\\b)"
+        + "|(?<NumeroDecimal>\\b\\d+(\\.\\d{2})\\b)"
+        + "|(?<NumeroEntero>\\b\\d+\\b)"
+        + "|(?<Nombre>\\b([a-zA-Z]([a-zA-Z]|\\d)*)\\b)"
+        + "|(?<Operador>[*+\\-/])"
+        + "|(?<Especial>[=;()])"
+        + "|(?<Texto>\"[^\"]+\")"
+        + "|(?<Salto>\n)", Pattern.CASE_INSENSITIVE);
         Matcher matcher = patronesBusqueda.matcher(documento);
 
         //ArrayList para guardar tokens e informacion de estos
-        ArrayList<ArrayList<String>> filaToken = new ArrayList<>();
-        ArrayList<ArrayList<String>> filaTipo = new ArrayList<>();
         ArrayList<String> token = new ArrayList<>();
         ArrayList<String> tipo = new ArrayList<>();
+        ArrayList<String> lin = new ArrayList<>();
         ArrayList<ArrayList<String>> listaTokens = new ArrayList<>();
 
         //Contador para token validos
@@ -56,49 +64,74 @@ public class analisisLexico {
         int indP = 0;
         while (matcher.find()) {
             ctdd++;
-            
+
             //Verificar token invalido
             if (matcher.start() > indP) {  
-                //System.out.println(indP+" Indice p");
                 String tokeninv = documento.substring(indP, matcher.start());
                 if (!tokeninv.isBlank()) {
-                    //System.out.println("Token invalido: " + tokeninv + " en linea "+linea);
+                    System.out.println("Token invalido: " + tokeninv + " en linea "+linea);
 
                     tipo.add("Token invalido");
                     token.add(tokeninv);
-                    listaTokens.add(tipo);
-                    listaTokens.add(token);
+                    lin.add("Linea: "+linea);
                 }
             }
-
-            if (!matcher.group().equals("\n")) {
-                //System.out.println("Token valido nm." + ctdd + " : " + matcher.group() + " en linea "+linea);
-                
-                //Palabras reservadas
-                if (matcher.group().equals("neg")||matcher.group().equals("vis")||matcher.group().equals("cond")
-                || matcher.group().equals("condsi")||matcher.group().equals("cil")||matcher.group().equals("dc")
-                || matcher.group().equals("itr")||matcher.group().equals("bool")) {
-                    tipo.add("Palabra reservada");
-                    token.add(matcher.group());
-                }
-                    
-                //Palabras reservadas tipo
-                else if(matcher.group().equals("nt") || matcher.group().equals("dc")|| matcher.group().equals("bool")|| matcher.group().equals("itr"))){
+            if (matcher.group("Salto")==null) {
+                //Tipo
+                if (matcher.group("Tipo") != null) {
                     tipo.add("Tipo");
                     token.add(matcher.group());
+                    lin.add("Linea: "+linea);
+                }    
+                //Numero entero
+                else if(matcher.group("NumeroEntero")!=null){
+                    tipo.add("NumeroEntero");
+                    token.add(matcher.group());
+                    lin.add("Linea: "+linea);
                 }
-                //
-                else if(){
-
+                //Numero decimal
+                else if(matcher.group("NumeroDecimal")!=null){
+                    tipo.add("NumeroDecimal");
+                    token.add(matcher.group());
+                    lin.add("Linea: "+linea);
+                }
+                //Nombre
+                else if(matcher.group("Nombre")!=null){
+                    tipo.add("Nombre");
+                    token.add(matcher.group());
+                    lin.add("Linea: "+linea);
                 }
                 //Operadores
-                else if(matcher.group().equals("*")||matcher.group().equals("+")||matcher.group().equals("-")||matcher.group().equals("/")){
+                else if(matcher.group("Operador") != null){
                     tipo.add("Operador");
                     token.add(matcher.group());
+                    lin.add("Linea: "+linea);
                 }
-
-                indP = matcher.end() + 1;
-                    
+                //Caracteres especiales
+                else if(matcher.group("Especial") != null){
+                    tipo.add("Especial");
+                    token.add(matcher.group());
+                    lin.add("Linea: "+linea);
+                }
+                //Texto
+                else if(matcher.group("Texto") != null){
+                    tipo.add("Texto");
+                    token.add(matcher.group());
+                    lin.add("Linea: "+linea);
+                }
+                //Caracteres especiales
+                else if(matcher.group("Especial") != null){
+                    tipo.add("Especial");
+                    token.add(matcher.group());
+                    lin.add("Linea: "+linea);
+                }
+                //Booleano
+                else if(matcher.group("Booleano") != null){
+                    tipo.add("Booleano");
+                    token.add(matcher.group());
+                    lin.add("Linea: "+linea);
+                }
+                indP = matcher.end() + 1;   
             }else{
                 indP = matcher.end();
                 linea++;
@@ -107,17 +140,14 @@ public class analisisLexico {
         }
 
         //Lista bidimensional con tipos y tokens
-        filaTipo.add(tipo);
-        filaToken.add(token);
         listaTokens.add(tipo);
         listaTokens.add(token);
-
+        listaTokens.add(lin);
         //Impresion tokens
-        for (int i = 0; i < listaTokens.size(); i++) {
-                
-                System.out.println("i "+i+ listaTokens.size());
+        for (int i = 0; i < listaTokens.get(0).size(); i++) {
                 System.out.print("Tipo: "+listaTokens.get(0).get(i));
-                System.out.println(". Token: "+listaTokens.get(1).get(i));
+                System.out.print(". Token: "+listaTokens.get(1).get(i));
+                System.out.println(". Linea: "+listaTokens.get(2).get(i));
             }
 
         //Dar los tokens obtenidos al analizador sintactico
